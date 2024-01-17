@@ -1,5 +1,5 @@
 [tool.poetry]
-name = 'dnd'
+name = 'dmsh'
 version = '1.0'
 license = 'The Unlicense'
 authors = ['Greg Boyington <evilchili@gmail.com>']
