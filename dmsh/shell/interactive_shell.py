@@ -213,7 +213,7 @@ class DMShell(BasePrompt):
         """
         Generate an NPC commoner
         """
-        char = npc.random_npc([ANCESTRIES[parts[0]]] if parts else [])
+        char = npc.random_npc([ANCESTRIES[parts[0]]] if parts else list(ANCESTRIES.values()))
         self.console.print(char.description + "\n")
         if char.personality:
             self.console.print(f"Personality: {char.personality}\n")
