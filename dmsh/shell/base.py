@@ -43,7 +43,8 @@ class BasePrompt(NestedCompleter):
         self._toolbar = None
         self._key_bindings = None
         self._subshells = {}
-        self._cache = cache
+        self._cache = defaultdict(dict)
+        self._cache.update(**cache)
         self._name = "Interactive Shell"
 
     def _register_subshells(self):
