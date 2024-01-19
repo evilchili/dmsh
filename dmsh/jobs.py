@@ -1,17 +1,10 @@
 import random
 import collections
-from pathlib import Path
 
 from rolltable.types import RollTable
 from npc import random_npc
 
 Crime = collections.namedtuple('Crime', ['name', 'min_bounty', 'max_bounty'])
-
-
-def generate_location(frequency='default'):
-    source = Path("sources/locations.yaml")
-    rt = RollTable([source.read_text()], hide_rolls=True, frequency=frequency)
-    return random.choice(rt.rows[1:])[1]
 
 
 def nearest(value, step=50):
@@ -33,13 +26,15 @@ class BaseJob:
         details=None,
         reward=None,
         contact=None,
-        location=None
+        location=None,
+        source_path=None
     ):
         self._name = name
         self._details = details
         self._reward = reward
         self._contact = contact or random_npc()
         self._location = location
+        self._source_path = source_path
 
     @property
     def name(self):
@@ -88,7 +83,6 @@ class Bounty(BaseJob):
         super().__init__(**kwargs)
 
         self._target = target
-
         self._crime = crime
 
         dead_or_alive = []
@@ -131,6 +125,11 @@ class Bounty(BaseJob):
             self._target = random_npc()
         return self._target
 
+    def generate_location(self, frequency='default'):
+        source = self._source_path / "locations.yaml"
+        rt = RollTable([source.read_text()], hide_rolls=True, frequency=frequency)
+        return random.choice(rt.rows[1:])[1]
+
 
 class Determinant(BaseJob):
     """
@@ -144,8 +143,8 @@ class Escort(BaseJob):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self._contact = random_npc()
-        self._location = generate_location('settlements')
-        self._destination = generate_location('default')
+        self._location = self.generate_location('settlements')
+        self._destination = self.generate_location('default')
         self._reward = f"{nearest(random.randint(5, 20), step=5)} GP/day"
         self._name = (
             f"Accompany {self.contact} from {self.location} to "
@@ -158,7 +157,7 @@ class Foraging(BaseJob):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        source = Path("sources/flora.yaml")
+        source = self._source_path / "flora.yaml"
         rt = RollTable([source.read_text()], hide_rolls=True)
 
         # [ rarity, name, descr, val ]
@@ -178,8 +177,8 @@ classes = BaseJob.__subclasses__()
 job_types = [c.__name__ for c in classes]
 
 
-def generate_job():
-    return random.choice(classes)()
+def generate_job(source_path):
+    return random.choice(classes)(source_path=source_path)
 
 
 if __name__ == '__main__':

@@ -379,7 +379,8 @@ class DMShell(BasePrompt):
         """
         Generate a random jobs table.
         """
-        self.console.print(jobs.generate_job())
+        source_path = self._data_path / Path("sources")
+        self.console.print(jobs.generate_job(source_path))
 
     @command(usage="""
     [title]PLACE[/title]
