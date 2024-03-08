@@ -13,6 +13,10 @@ CONFIG = {
 
     # campaign start date
     "campaign_start_date": "2.1125.5.25",
+
+    # croaker address
+    "croaker_host": 'gumpas.local',
+    "croaker_port": 8003,
 }
 
 

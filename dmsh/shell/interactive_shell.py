@@ -10,6 +10,7 @@ from dmsh import campaign
 from dmsh import jobs
 from dmsh import striders
 from dmsh import hoppers
+from dmsh import croaker
 
 from reckoning.calendar import TelisaranCalendar
 from reckoning.telisaran import Day
@@ -30,6 +31,12 @@ class DMShell(BasePrompt):
         self._name = "DM Shell"
         self._prompt = ["dm"]
         self._toolbar = [("class:bold", " DMSH ")]
+
+        self._croaker = croaker.CroakerClient(
+            host=self.cache['croaker_host'],
+            port=self.cache['croaker_port']
+        )
+
         self._key_bindings = BINDINGS
         self._register_subshells()
         self._register_keybindings()
@@ -54,9 +61,47 @@ class DMShell(BasePrompt):
                 ("", " [F5] Date"),
                 ("", " [F6] Job"),
                 ("", " [F8] Save"),
+                ("", " [F9] Music Hotkeys"),
+                ("", " [^1-9] Music"),
                 ("", " [^Q] Quit "),
             ]
         )
+
+        @self.key_bindings.add("m", "1")
+        def music_session_start(event):
+            self.music(["play", "session_start"])
+
+        @self.key_bindings.add("m", "2")
+        def music_session_start(event):
+            self.music(["play", "sahwat"])
+
+        @self.key_bindings.add("m", "3")
+        def music_session_start(event):
+            self.music(["play", "battle"])
+
+        @self.key_bindings.add("m", "4")
+        def music_session_start(event):
+            self.music(["play", "boss"])
+
+        @self.key_bindings.add("m", "5")
+        def music_session_start(event):
+            self.music(["play", "tense"])
+
+        @self.key_bindings.add("m", "6")
+        def music_session_start(event):
+            self.music(["play", "quiet"])
+
+        @self.key_bindings.add("m", "7")
+        def music_session_start(event):
+            self.music(["play", "adventure"])
+
+        @self.key_bindings.add("m", "8")
+        def music_session_start(event):
+            self.music(["play", "mystery"])
+
+        @self.key_bindings.add("m", "9")
+        def music_session_start(event):
+            self.music(["play", "ffxii_battle"])
 
         @self.key_bindings.add("c-q")
         @self.key_bindings.add("c-d")
@@ -91,6 +136,24 @@ class DMShell(BasePrompt):
         @self.key_bindings.add("f8")
         def save(event):
             self.save()
+
+        @self.key_bindings.add("f9")
+        def music(event):
+            self._music_hotkeys()
+
+
+    def _music_hotkeys(self):
+        self.console.print("To switch music streams, press [b]m[/b] followed a number 1-9:")
+        self.console.print("  [b]1[/b]  Session Start")
+        self.console.print("  [b]2[/b]  Sahwat Overland")
+        self.console.print("  [b]3[/b]  Overland Battle")
+        self.console.print("  [b]4[/b]  Boss Battle")
+        self.console.print("  [b]5[/b]  Tense")
+        self.console.print("  [b]6[/b]  Quiet")
+        self.console.print("  [b]7[/b]  Dungeon Adventure")
+        self.console.print("  [b]8[/b]  Dungeon Mystery")
+        self.console.print("  [b]9[/b]  Dungeon Battle")
+        self.console.print("\nSee also the [link]music[/link] command.")
 
     def _handler_date_season(self, *args):
         self.console.print(self.cache['calendar'].season)
@@ -391,3 +454,38 @@ class DMShell(BasePrompt):
         """
         freq = parts[0] if parts else 'nodesert'
         self.console.print(self._rolltable("locations.yaml", frequency=freq, die=4))
+
+    @command(usage="""
+    [title]MUSIC[/title]
+
+    [b]music[/b] Croaker controller.
+
+    [title]USAGE[/title]
+
+        [link]> music [COMMAND[, ARGS]][/link]
+
+        COMMAND      Description
+
+        list [NAME]  List available playlists, or the contents of the NAME playlist
+        play NAME    Switch to the named playlist
+        skip         Skip the current track
+    """, completer=WordCompleter([
+        'list',
+        'play',
+        'skip',
+    ]))
+    def music(self, parts=[]):
+        """
+        Control the music player
+        """
+        if parts:
+            cmd, *args = parts
+        else:
+            cmd = 'list'
+            args = []
+
+        handler = getattr(self._croaker, cmd, None)
+        if not handler:
+            self.console.error(f"Unsupported command: {cmd}. Try 'help music'.")
+            return
+        self.console.print(handler(*args))
